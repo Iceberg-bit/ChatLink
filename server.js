@@ -25,6 +25,10 @@ try {
   console.warn('Could not load .env file:', e);
 }
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db';
+}
+
 const app = express();
 const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
