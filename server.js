@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { randomBytes } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 // Load .env variables manually for environment compatibility (e.g. on Render)
 try {
@@ -27,6 +28,14 @@ try {
 
 if (!process.env.DATABASE_URL) {
   process.env.DATABASE_URL = 'file:./dev.db';
+}
+
+// Run database push programmatically to set up SQLite schema at startup
+try {
+  console.log('Initializing database schema via prisma db push...');
+  execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+} catch (err) {
+  console.error('Database initialization failed:', err);
 }
 
 const app = express();

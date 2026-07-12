@@ -8,7 +8,7 @@
     "start": "node server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "build": "prisma generate && prisma db push"
+    "build": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.12.0",
