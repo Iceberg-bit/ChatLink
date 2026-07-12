@@ -4,6 +4,8 @@ const fields = ['label', 'countryCode', 'phone', 'message'].reduce((acc, id) => 
 let currentUrl = '';
 let currentQrUrl = '';
 let editingId = null;
+const isStaticDeployment = window.location.hostname.endsWith('.github.io');
+const qrOptions = { margin: 4, errorCorrectionLevel: 'L', color: { dark: '#000000', light: '#ffffff' } };
 
 function isPublicHost(hostname = window.location.hostname) {
   const host = hostname.toLowerCase();
@@ -16,7 +18,7 @@ function qrTarget(link) {
   // environments encode WhatsApp directly; use our compact redirect only
   // after the app is deployed to a publicly reachable domain.
   if (typeof link === 'string') return link;
-  return isPublicHost() && link.slug ? `${window.location.origin}/chatlink/${link.slug}` : link.url;
+  return !isStaticDeployment && isPublicHost() && link.slug ? `${window.location.origin}/chatlink/${link.slug}` : link.url;
 }
 
 function setTheme(isDark) {
@@ -44,6 +46,27 @@ async function copy(text) { try { await navigator.clipboard.writeText(text); toa
 function download(content, filename, type) { const blob = new Blob([content], { type }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href); }
 function qrUrl(format) { return `/api/qr?format=${format}&url=${encodeURIComponent(currentQrUrl || currentUrl)}`; }
 
+async function renderQr() {
+  const display = $('#qr-display');
+  if (!isStaticDeployment) {
+    display.innerHTML = `<img src="${qrUrl('svg')}" width="135" height="135" alt="QR code for this WhatsApp link" />`;
+    return;
+  }
+  if (!window.QRCode) throw new Error('QR generator could not be loaded. Check your internet connection and try again.');
+  display.innerHTML = await QRCode.toString(currentQrUrl, { ...qrOptions, type: 'svg', width: 360 });
+  display.querySelector('svg').setAttribute('aria-label', 'QR code for this WhatsApp link');
+}
+
+async function downloadQr(format) {
+  if (!isStaticDeployment) {
+    const a = document.createElement('a'); a.href = qrUrl(format); a.download = `whatsapp-link-qr.${format}`; a.click();
+    return;
+  }
+  if (!window.QRCode) return toast('QR generator could not be loaded.');
+  if (format === 'png') return download(await QRCode.toDataURL(currentQrUrl, { ...qrOptions, width: 1800 }), 'whatsapp-link-qr.png', 'image/png');
+  return download(await QRCode.toString(currentQrUrl, { ...qrOptions, type: 'svg', width: 1200 }), 'whatsapp-link-qr.svg', 'image/svg+xml');
+}
+
 async function showResult(link) {
   const url = typeof link === 'string' ? link : link.url;
   currentUrl = url; currentQrUrl = qrTarget(link);
@@ -51,13 +74,17 @@ async function showResult(link) {
   $('#qr-caption').textContent = isPublicHost() && typeof link !== 'string'
     ? 'Short QR · opens your WhatsApp link'
     : 'Direct WhatsApp QR · deploy for a shorter code';
-  const display = $('#qr-display'); display.innerHTML = `<img src="${qrUrl('svg')}" width="135" height="135" alt="QR code for this WhatsApp link" />`;
+  await renderQr();
   $('#result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 function validate(data) { if (!data.countryCode || data.countryCode.length > 4) return 'Enter a valid country code.'; if (data.phone.length < 6 || data.phone.length > 15) return 'Enter a valid phone number (6–15 digits).'; if (!data.message.trim()) return 'Write the message you would like to pre-fill.'; if (data.message.length > 500) return 'Keep the message to 500 characters or fewer.'; return ''; }
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); const data = cleaned(); const error = validate(data); $('#form-error').textContent = error; if (error) return;
+  if (isStaticDeployment) {
+    try { await showResult(urlFor(data)); toast('Link generated in your browser'); } catch (err) { $('#form-error').textContent = err.message || 'Could not generate the QR code.'; }
+    return;
+  }
   const targetId = form.dataset.editingId || editingId;
   const isEditing = targetId !== undefined && targetId !== null && targetId !== '';
   const method = isEditing ? 'PUT' : 'POST'; const endpoint = isEditing ? `/api/links/${targetId}` : '/api/links';
@@ -65,13 +92,19 @@ form.addEventListener('submit', async (event) => {
 });
 
 $('#copy-result').addEventListener('click', () => copy(currentUrl));
-$('#download-png').addEventListener('click', () => { const a = document.createElement('a'); a.href = qrUrl('png'); a.download = 'whatsapp-link-qr.png'; a.click(); });
-$('#download-svg').addEventListener('click', () => { const a = document.createElement('a'); a.href = qrUrl('svg'); a.download = 'whatsapp-link-qr.svg'; a.click(); });
+$('#download-png').addEventListener('click', () => downloadQr('png'));
+$('#download-svg').addEventListener('click', () => downloadQr('svg'));
 
 function escapeHtml(value) { return value.replace(/[&<>'"]/g, char => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' })[char]); }
 function dateText(iso) { return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(iso)); }
 function dateTimeText(iso) { return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(iso)); }
 async function loadHistory() {
+  if (isStaticDeployment) {
+    $('#history-table').classList.add('hidden');
+    $('#empty-state').classList.remove('hidden');
+    $('#empty-state p').innerHTML = 'Links are generated in your browser.<br><small>GitHub Pages does not store link history.</small>';
+    return;
+  }
   try { const response = await fetch('/api/links'); const items = await response.json(); const table = $('#history-table'); const empty = $('#empty-state'); $('#history-count').textContent = items.length ? `${items.length} saved` : ''; empty.classList.toggle('hidden', !!items.length); table.classList.toggle('hidden', !items.length);
     table.querySelector('tbody').innerHTML = items.map(item => `<tr><td><span class="link-title">${escapeHtml(item.label || 'Untitled link')}</span><span class="link-number">+${item.countryCode} ${item.phone}</span></td><td class="message-cell" title="${escapeHtml(item.message)}">${escapeHtml(item.message)}</td><td class="date-cell">${dateText(item.createdAt)}</td><td class="date-cell">${dateTimeText(item.updatedAt || item.createdAt)}</td><td><div class="row-actions"><button class="icon-button" data-copy="${item.id}" title="Copy link">Copy</button><button class="icon-button" data-qr="${item.id}" title="Show QR">QR</button><button class="icon-button" data-edit="${item.id}" title="Edit link">Edit</button><button class="icon-button delete" data-delete="${item.id}" title="Delete link">Delete</button></div></td></tr>`).join('');
     table.querySelector('tbody').onclick = async (event) => { const button = event.target.closest('button'); if (!button) return; const actionId = button.dataset.copy || button.dataset.qr || button.dataset.edit || button.dataset.delete; const id = Number(actionId); const item = items.find(x => x.id === id); if (!item) return; if (button.dataset.copy) copy(item.url); if (button.dataset.qr) showResult(item); if (button.dataset.edit) { Object.entries(fields).forEach(([key, el]) => el.value = item[key] || ''); editingId = item.id; form.dataset.editingId = String(item.id); $('.generate span').textContent = 'Save changes'; updatePreview(); window.scrollTo({ top: 0, behavior: 'smooth' }); } if (button.dataset.delete && confirm(`Delete “${item.label || 'this link'}”?`)) { await fetch(`/api/links/${id}`, { method: 'DELETE' }); toast('Link deleted'); loadHistory(); } };
