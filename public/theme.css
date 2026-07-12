@@ -13,7 +13,7 @@
 :root[data-theme="dark"] .preview code { color: #b9cec2; }
 :root[data-theme="dark"] .result { background: #0b1712; }
 :root[data-theme="dark"] .secondary { background: #e9f2ed; color: #17211e; }
-:root[data-theme="dark"] .qr-card { background: #f7faf8; }
+:root[data-theme="dark"] .qr-card { background: #f7faf8; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
 :root[data-theme="dark"] .brand img { background: #f8fbf9; }
 :root[data-theme="dark"] .icon-button { color: #b4d0c0; }
 :root[data-theme="dark"] .icon-button:hover { color: var(--green); }

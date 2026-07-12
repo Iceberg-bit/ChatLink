@@ -5,7 +5,7 @@ let currentUrl = '';
 let currentQrUrl = '';
 let editingId = null;
 const isStaticDeployment = window.location.hostname.endsWith('.github.io');
-const qrOptions = { margin: 4, errorCorrectionLevel: 'L', color: { dark: '#000000', light: '#ffffff' } };
+const qrOptions = { margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000000', light: '#ffffff' } };
 
 function isPublicHost(hostname = window.location.hostname) {
   const host = hostname.toLowerCase();
@@ -49,7 +49,7 @@ function qrUrl(format) { return `/api/qr?format=${format}&url=${encodeURICompone
 async function renderQr() {
   const display = $('#qr-display');
   if (!isStaticDeployment) {
-    display.innerHTML = `<img src="${qrUrl('svg')}" width="135" height="135" alt="QR code for this WhatsApp link" />`;
+    display.innerHTML = `<img src="${qrUrl('svg')}" width="256" height="256" alt="QR code for this WhatsApp link" />`;
     return;
   }
   if (!window.QRCode) throw new Error('QR generator could not be loaded. Check your internet connection and try again.');
@@ -73,7 +73,7 @@ async function showResult(link) {
   $('#result').classList.remove('hidden'); $('#result-url').textContent = url; $('#result-url').href = url; $('#open-whatsapp').href = url;
   $('#qr-caption').textContent = isPublicHost() && typeof link !== 'string'
     ? 'Short QR · opens your WhatsApp link'
-    : 'Direct WhatsApp QR · deploy for a shorter code';
+    : 'Direct WhatsApp QR';
   await renderQr();
   $('#result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }

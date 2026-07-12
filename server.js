@@ -43,9 +43,10 @@ app.get('/api/qr', async (req, res) => {
   let hostname = '';
   try { hostname = new URL(url).hostname; } catch { return res.status(400).send('Invalid QR URL'); }
   if (!['wa.me', req.hostname].includes(hostname) || url.length > 2500) return res.status(400).send('Invalid QR URL');
-  const options = { margin: 4, width: format === 'png' ? 1800 : 1200, errorCorrectionLevel: 'L', color: { dark: '#000000', light: '#ffffff' } };
+
+  const options = { margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000000', light: '#ffffff' } };
   if (format === 'png') {
-    res.type('png').send(await QRCode.toBuffer(url, options));
+    res.type('png').send(await QRCode.toBuffer(url, { ...options, width: 1800 }));
   } else {
     res.type('image/svg+xml').send(await QRCode.toString(url, { ...options, type: 'svg' }));
   }
