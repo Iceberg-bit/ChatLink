@@ -2,6 +2,28 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import QRCode from 'qrcode';
 import { randomBytes } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Load .env variables manually for environment compatibility (e.g. on Render)
+try {
+  const envPath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(envPath)) {
+    const envConfig = fs.readFileSync(envPath, 'utf8');
+    for (const line of envConfig.split('\n')) {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let val = match[2] || '';
+        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+        if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+        if (!process.env[key]) process.env[key] = val.trim();
+      }
+    }
+  }
+} catch (e) {
+  console.warn('Could not load .env file:', e);
+}
 
 const app = express();
 const prisma = new PrismaClient();
