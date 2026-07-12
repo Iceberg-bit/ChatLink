@@ -1,0 +1,6 @@
+node_modules/
+.pnpm-store/
+.env
+prisma/dev.db
+prisma/dev.db-journal
+.env.local

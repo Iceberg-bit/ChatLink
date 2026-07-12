@@ -1,0 +1,21 @@
+/* Theme and branding additions */
+.hero { position: relative; }
+.brand { align-self: start; }
+.brand img { display: block; width: min(205px, 42vw); height: auto; border-radius: 8px; }
+.theme-toggle { position: absolute; top: 0; right: 0; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 11px; color: var(--ink); background: var(--paper); font: 800 11px Manrope, system-ui, sans-serif; cursor: pointer; transition: background .18s, border-color .18s, color .18s; }
+.theme-toggle:hover { background: var(--soft); border-color: var(--green); }
+.theme-icon { font-size: 15px; line-height: 1; color: var(--green); }
+
+:root[data-theme="dark"] { --ink: #e9f2ed; --muted: #9baea4; --line: #31463d; --paper: #112019; --green: #46c98c; --deep: #2ba774; --lime: #ddf16a; --soft: #1d3229; --coral: #ff8c80; }
+:root[data-theme="dark"] body { background: var(--paper); }
+:root[data-theme="dark"] input, :root[data-theme="dark"] textarea { background: #172a22; color: var(--ink); }
+:root[data-theme="dark"] .preview { background: var(--soft); }
+:root[data-theme="dark"] .preview code { color: #b9cec2; }
+:root[data-theme="dark"] .result { background: #0b1712; }
+:root[data-theme="dark"] .secondary { background: #e9f2ed; color: #17211e; }
+:root[data-theme="dark"] .qr-card { background: #f7faf8; }
+:root[data-theme="dark"] .brand img { background: #f8fbf9; }
+:root[data-theme="dark"] .icon-button { color: #b4d0c0; }
+:root[data-theme="dark"] .icon-button:hover { color: var(--green); }
+
+@media (max-width: 650px) { .theme-toggle { top: -4px; } .theme-label { display: none; } .theme-toggle { width: 36px; height: 36px; justify-content: center; padding: 0; } .brand img { width: 185px; } }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#075E54" />
+  <title>WhatsApp Link Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <script>
+    (() => {
+      const preference = localStorage.getItem('chatlink-theme');
+      if (preference === 'dark' || (!preference && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.dataset.theme = 'dark';
+    })();
+  </script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div class="brand"><img src="chatlink-logo.png" alt="ChatLink — Start conversations instantly." /></div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button>
+      <div class="hero-copy"><p class="eyebrow">CLICK-TO-CHAT</p><h1>Start the conversation<br><em>before they type.</em></h1><p>Create clean WhatsApp links with a pre-filled message. No contact saving required.</p></div>
+    </header>
+
+    <section class="builder" aria-labelledby="generator-title">
+      <div class="section-heading"><div><p class="eyebrow">NEW LINK</p><h2 id="generator-title">Message details</h2></div><span class="required-note">* Required fields</span></div>
+      <form id="link-form" novalidate>
+        <div class="field"><label for="label">Label <span>optional</span></label><input id="label" maxlength="80" placeholder="e.g. Sales enquiry" /></div>
+        <div class="number-row"><div class="field"><label for="countryCode">Country code *</label><div class="code-input"><span>+</span><input id="countryCode" inputmode="numeric" maxlength="4" value="91" aria-describedby="country-hint" /></div><small id="country-hint">Without the + sign</small></div><div class="field"><label for="phone">WhatsApp number *</label><input id="phone" inputmode="numeric" maxlength="15" placeholder="98765 43210" /></div></div>
+        <div class="field"><label for="message">Pre-filled message *</label><textarea id="message" maxlength="500" placeholder="Hi! I’d like to know more about…"></textarea><div class="field-footer"><span id="message-count">0 / 500</span><span>Use your customer’s natural language</span></div></div>
+        <div class="preview"><span class="preview-label">LIVE PREVIEW</span><code id="url-preview">https://wa.me/…?text=…</code></div>
+        <p id="form-error" class="form-error" role="alert"></p>
+        <button class="generate" type="submit"><span>Generate link</span><span aria-hidden="true">→</span></button>
+      </form>
+    </section>
+
+    <section id="result" class="result hidden" aria-live="polite">
+      <div class="result-copy"><p class="eyebrow">READY TO SHARE</p><h2>Your link is ready.</h2><a id="result-url" target="_blank" rel="noreferrer"></a><div class="result-actions"><button class="button secondary" id="copy-result">Copy link</button><a class="button primary" id="open-whatsapp" target="_blank" rel="noreferrer">Open WhatsApp ↗</a></div></div>
+      <div class="qr-card"><div id="qr-display" class="qr-display"></div><p id="qr-caption">Short QR · opens your WhatsApp link</p><div class="download-actions"><button id="download-png">PNG</button><button id="download-svg">SVG</button></div></div>
+    </section>
+
+    <section class="history" aria-labelledby="history-title"><div class="section-heading"><div><p class="eyebrow">SAVED LOCALLY</p><h2 id="history-title">Your generated links</h2></div><span id="history-count" class="history-count"></span></div><div id="empty-state" class="empty-state"><span>⌁</span><p>Your links will appear here.<br><small>They’re stored only in this browser’s local app database.</small></p></div><div class="table-wrap"><table id="history-table" class="hidden"><thead><tr><th>Label / number</th><th>Message</th><th>Created</th><th>Last updated</th><th><span class="sr-only">Actions</span></th></tr></thead><tbody></tbody></table></div></section>
+  </main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
